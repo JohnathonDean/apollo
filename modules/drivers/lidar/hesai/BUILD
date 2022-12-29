@@ -1,14 +1,37 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+load("//tools/install:install.bzl", "install")
 load("//tools:cpplint.bzl", "cpplint")
 
 package(default_visibility = ["//visibility:public"])
 
 HESAI_COPTS = ['-DMODULE_NAME=\\"hesai\\"']
 
+install(
+    name = "install",
+    data_dest = "drivers/addition_data/lidar/hesai",
+    library_dest = "drivers/lib/lidar/hesai",
+    data = [
+        ":runtime_data",
+    ],
+    targets = [
+        "libhesai_driver_component.so",
+    ],
+)
+
+filegroup(
+    name = "runtime_data",
+    srcs = glob([
+        "conf/*.txt",
+        "conf/*.conf",
+        "dag/*.dag",
+        "launch/*.launch",
+    ]),
+)
+
 cc_binary(
     name = "libhesai_driver_component.so",
     linkshared = True,
-    linkstatic = False,
+    linkstatic = True,
     deps = [
         ":hesai_convert_component",
         "//modules/drivers/lidar/hesai/driver:hesai_component",
@@ -26,6 +49,7 @@ cc_library(
         "//modules/drivers/lidar/hesai/driver",
         "//modules/drivers/lidar/proto:hesai_config_cc_proto",
     ],
+    alwayslink = True,
 )
 
 cc_library(
@@ -74,7 +98,7 @@ cc_library(
         "//cyber",
         "//modules/drivers/lidar/proto:hesai_cc_proto",
         "//modules/drivers/lidar/proto:hesai_config_cc_proto",
-        "//modules/drivers/proto:pointcloud_cc_proto",
+        "//modules/common_msgs/sensor_msgs:pointcloud_cc_proto",
     ],
 )
 

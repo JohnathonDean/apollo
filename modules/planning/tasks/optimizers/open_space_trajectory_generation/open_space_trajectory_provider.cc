@@ -47,6 +47,7 @@ OpenSpaceTrajectoryProvider::OpenSpaceTrajectoryProvider(
   open_space_trajectory_optimizer_.reset(new OpenSpaceTrajectoryOptimizer(
       config.open_space_trajectory_provider_config()
           .open_space_trajectory_optimizer_config()));
+  AINFO << config_.DebugString();
 }
 
 OpenSpaceTrajectoryProvider::~OpenSpaceTrajectoryProvider() {
@@ -123,10 +124,10 @@ Status OpenSpaceTrajectoryProvider::Process() {
     const double start_timestamp = Clock::NowInSeconds();
     stitching_trajectory = TrajectoryStitcher::ComputeStitchingTrajectory(
         vehicle_state, start_timestamp, planning_cycle_time,
-        FLAGS_open_space_trajectory_stitching_preserved_length, false,
+        FLAGS_open_space_trajectory_stitching_preserved_length, true,
         &last_frame_complete_trajectory, &replan_reason);
   } else {
-    ADEBUG << "Replan due to fallback stop";
+    AINFO << "Replan due to fallback stop";
     const double planning_cycle_time =
         1.0 / static_cast<double>(FLAGS_planning_loop_rate);
     stitching_trajectory = TrajectoryStitcher::ComputeReinitStitchingTrajectory(
@@ -159,7 +160,15 @@ Status OpenSpaceTrajectoryProvider::Process() {
       thread_data_.obstacles_vertices_vec =
           open_space_info.obstacles_vertices_vec();
       thread_data_.XYbounds = open_space_info.ROI_xy_boundary();
-      data_ready_.store(true);
+      if (stitching_trajectory.size() <= 1 || !injector_->planning_context()
+                                                   ->mutable_planning_status()
+                                                   ->mutable_open_space()
+                                                   ->position_init()) {
+        data_ready_.store(true);
+      } else {
+        data_ready_.store(false);
+        AINFO << "SKIP BECAUSE HAS PLAN";
+      }
     }
 
     // Check vehicle state

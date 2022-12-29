@@ -3,6 +3,13 @@ load("//tools:cpplint.bzl", "cpplint")
 
 package(default_visibility = ["//visibility:public"])
 
+filegroup(
+    name = "cyber_transport_shm_hdrs",
+    srcs = glob([
+        "*.h",
+    ]),
+)
+
 cc_library(
     name = "block",
     srcs = ["block.cc"],
@@ -134,10 +141,12 @@ cc_test(
     name = "condition_notifier_test",
     size = "small",
     srcs = ["condition_notifier_test.cc"],
+    tags = ["exclusive"],
     deps = [
         "//cyber:cyber_core",
         "@com_google_googletest//:gtest_main",
     ],
+    linkstatic = True,
 )
 
 cpplint()

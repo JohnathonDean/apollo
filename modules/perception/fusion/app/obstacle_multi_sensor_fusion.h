@@ -15,35 +15,36 @@
  *****************************************************************************/
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "modules/perception/fusion/lib/interface/base_multisensor_fusion.h"
 #include "modules/perception/fusion/lib/interface/base_fusion_system.h"
+#include "modules/perception/pipeline/pipeline.h"
 
 namespace apollo {
 namespace perception {
 namespace fusion {
 
-struct ObstacleMultiSensorFusionParam {
-  std::vector<std::string> main_sensors;
-  std::string fusion_method;
-};
-
-class ObstacleMultiSensorFusion {
+class ObstacleMultiSensorFusion : public BaseMultiSensorFusion {
  public:
   ObstacleMultiSensorFusion() = default;
-  ~ObstacleMultiSensorFusion() = default;
-  ObstacleMultiSensorFusion(const ObstacleMultiSensorFusion&) = delete;
-  ObstacleMultiSensorFusion& operator=(const ObstacleMultiSensorFusion&) =
-      delete;
-  bool Init(const ObstacleMultiSensorFusionParam& param);
-  bool Process(const base::FrameConstPtr& frame,
-               std::vector<base::ObjectPtr>* objects);
+  virtual ~ObstacleMultiSensorFusion() = default;
 
-  std::string Name() const { return "ObstacleMultiSensorFusion"; }
+  bool Init(const ObstacleMultiSensorFusionParam& param) override;
+
+  bool Process(const base::FrameConstPtr& frame,
+               std::vector<base::ObjectPtr>* objects) override;
+
+  bool Init(const PipelineConfig& pipeline_config) override;
+
+  bool Process(DataFrame* data_frame) override;
+
+  std::string Name() const override { return name_; }
 
  protected:
-  BaseFusionSystem* fusion_ = nullptr;
+  std::unique_ptr<BaseFusionSystem> fusion_;
 };
 
 }  // namespace fusion

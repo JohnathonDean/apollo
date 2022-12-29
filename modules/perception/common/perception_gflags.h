@@ -58,6 +58,31 @@ DECLARE_double(score_threshold);
 DECLARE_double(nms_overlap_threshold);
 DECLARE_int32(num_output_box_feature);
 
+// lidar_mask_pillars
+DECLARE_string(mask_pfe_torch_file);
+DECLARE_string(mask_scattered_torch_file);
+DECLARE_string(mask_backbone_torch_file);
+DECLARE_string(mask_fpn_torch_file);
+DECLARE_string(mask_bbox_head_torch_file);
+
+// lidar_center_point
+DECLARE_string(center_point_model_file);
+DECLARE_string(center_point_params_file);
+DECLARE_bool(use_trt);
+DECLARE_int32(trt_precision);
+DECLARE_int32(trt_use_static);
+DECLARE_string(trt_static_dir);
+DECLARE_int32(collect_shape_info);
+DECLARE_string(dynamic_shape_file);
+
+// bev petr_v1
+DECLARE_string(bev_model_file);
+DECLARE_string(bev_params_file);
+
+// caddn
+DECLARE_string(caddn_model_file);
+DECLARE_string(caddn_params_file);
+
 // emergency detection onnx
 DECLARE_string(onnx_obstacle_detector_model);
 DECLARE_string(onnx_test_input_path);

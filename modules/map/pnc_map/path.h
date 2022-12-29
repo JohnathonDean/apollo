@@ -20,15 +20,13 @@
 #include <utility>
 #include <vector>
 
-#include "modules/map/proto/map_lane.pb.h"
-
-#include "cyber/common/log.h"
+#include "modules/common_msgs/map_msgs/map_lane.pb.h"
 #include "modules/common/math/box2d.h"
 #include "modules/common/math/line_segment2d.h"
 #include "modules/common/math/vec2d.h"
-#include "modules/map/hdmap/hdmap.h"
 #include "modules/map/hdmap/hdmap_common.h"
 #include "modules/map/hdmap/hdmap_util.h"
+#include "modules/map/hdmap/hdmap.h"
 
 namespace apollo {
 namespace hdmap {
@@ -315,6 +313,9 @@ class Path {
   const std::vector<PathOverlap>& parking_space_overlaps() const {
     return parking_space_overlaps_;
   }
+  const std::vector<PathOverlap>& dead_end_overlaps() const {
+    return dead_end_overlaps_;
+  }
 
   double GetLaneLeftWidth(const double s) const;
   double GetLaneRightWidth(const double s) const;
@@ -374,6 +375,7 @@ class Path {
   std::vector<PathOverlap> stop_sign_overlaps_;
   std::vector<PathOverlap> crosswalk_overlaps_;
   std::vector<PathOverlap> parking_space_overlaps_;
+  std::vector<PathOverlap> dead_end_overlaps_;
   std::vector<PathOverlap> junction_overlaps_;
   std::vector<PathOverlap> pnc_junction_overlaps_;
   std::vector<PathOverlap> clear_area_overlaps_;

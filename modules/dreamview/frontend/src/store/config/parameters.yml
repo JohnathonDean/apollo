@@ -97,6 +97,8 @@ options:
     default: false
   showDataRecorder:
     default: false
+  showProfile:
+    default: false
 
   # task panel options
   showPNCMonitor:
@@ -152,6 +154,9 @@ options:
   showPredictionPriority:
     default: true
     menuId: predictionPriority
+  showPredictionInteractiveTag:
+    default: true
+    menuId: predictionInteractiveTag
   showPointCloud:
     default: false
     menuId: perceptionPointCloud

@@ -21,7 +21,7 @@
 #include "modules/perception/base/frame.h"
 #include "modules/perception/base/hdmap_struct.h"
 #include "modules/perception/base/impending_collision_edge.h"
-#include "modules/perception/proto/perception_obstacle.pb.h"
+#include "modules/common_msgs/perception_msgs/perception_obstacle.pb.h"
 
 namespace apollo {
 namespace perception {
@@ -29,7 +29,7 @@ namespace onboard {
 
 enum class ProcessStage {
   LIDAR_PREPROCESS = 0,
-  LIDAR_SEGMENTATION = 1,
+  LIDAR_DETECTION = 1,
   LIDAR_RECOGNITION = 2,
   STEREO_CAMERA_DETECTION = 3,
   MONOCULAR_CAMERA_DETECTION = 4,
@@ -38,8 +38,7 @@ enum class ProcessStage {
   ULTRASONIC_DETECTION = 7,
   SENSOR_FUSION = 8,
   UNKNOWN_STAGE = 9,
-  PROCESSSTAGE_COUNT = 10,
-  LIDAR_DETECTION = 11
+  PROCESSSTAGE_COUNT = 10
 };
 
 class Descriptor {

@@ -19,6 +19,7 @@ export default class RealtimeWebSocketEndpoint {
     this.worker = new Worker();
     this.pointcloudWS = null;
     this.requestHmiStatus = this.requestHmiStatus.bind(this);
+    this.updateParkingRoutingDistance = true;
   }
 
   initialize() {
@@ -43,6 +44,7 @@ export default class RealtimeWebSocketEndpoint {
       switch (message.type) {
         case 'HMIStatus':
           STORE.hmi.updateStatus(message.data);
+          STORE.studioConnector.updateLocalScenarioInfo(message.data);
           RENDERER.updateGroundImage(STORE.hmi.currentMap);
           break;
         case 'VehicleParam':
@@ -55,9 +57,9 @@ export default class RealtimeWebSocketEndpoint {
           this.checkMessage(message);
 
           const isNewMode = (this.currentMode
-                                       && this.currentMode !== STORE.hmi.currentMode);
+            && this.currentMode !== STORE.hmi.currentMode);
           const isNavigationModeInvolved = (this.currentMode === 'Navigation'
-                                                    || STORE.hmi.currentMode === 'Navigation');
+            || STORE.hmi.currentMode === 'Navigation');
           this.currentMode = STORE.hmi.currentMode;
           if (STORE.hmi.shouldDisplayNavigationMap) {
             if (MAP_NAVIGATOR.isInitialized()) {
@@ -107,6 +109,7 @@ export default class RealtimeWebSocketEndpoint {
           STORE.routeEditingManager.updateDefaultRoutingPoints(message);
           break;
         case 'AddDefaultRoutingPath':
+          // used for user-defined routing: default routing,park and go routing
           STORE.routeEditingManager.addDefaultRoutingPath(message);
           break;
         case 'RoutePath':
@@ -127,6 +130,11 @@ export default class RealtimeWebSocketEndpoint {
             STORE.hmi.updatePreprocessProgress(message.data);
           }
           break;
+        case 'ParkingRoutingDistance':
+          if (message) {
+            STORE.routeEditingManager.updateParkingRoutingDistance(message.threshold);
+          }
+          break;
       }
     };
     this.websocket.onclose = (event) => {
@@ -137,7 +145,7 @@ export default class RealtimeWebSocketEndpoint {
       const lossDuration = now - this.simWorldLastUpdateTimestamp;
       const alertDuration = now - STORE.monitor.lastUpdateTimestamp;
       if (this.simWorldLastUpdateTimestamp !== 0
-                && lossDuration > 10000 && alertDuration > 2000) {
+        && lossDuration > 10000 && alertDuration > 2000) {
         const message = 'Connection to the server has been lost.';
         STORE.monitor.insert('FATAL', message, now);
         if (UTTERANCE.getCurrentText() !== message || !UTTERANCE.isSpeaking()) {
@@ -162,10 +170,15 @@ export default class RealtimeWebSocketEndpoint {
           this.requestDefaultRoutingPoints();
           this.updateDefaultRoutingPoints = false;
         }
+
         if (this.pointcloudWS.isEnabled()) {
           this.pointcloudWS.requestPointCloud();
         }
         this.requestSimulationWorld(STORE.options.showPNCMonitor);
+        if (this.updateParkingRoutingDistance) {
+          this.requestParkingRoutingDistance();
+          this.updateParkingRoutingDistance = false;
+        }
         if (STORE.hmi.isVehicleCalibrationMode) {
           this.requestDataCollectionProgress();
           this.requestPreprocessProgress();
@@ -175,6 +188,13 @@ export default class RealtimeWebSocketEndpoint {
         }
       }
     }, this.simWorldUpdatePeriodMs);
+  }
+
+  checkWsConnection() {
+    if (this.websocket.readyState === this.websocket.OPEN) {
+      return this;
+    }
+    return this.initialize();
   }
 
   updateMapIndex(message) {
@@ -268,6 +288,12 @@ export default class RealtimeWebSocketEndpoint {
     }));
   }
 
+  requestParkingRoutingDistance() {
+    this.websocket.send(JSON.stringify({
+      type: 'GetParkingRoutingDistance',
+    }));
+  }
+
   resetBackend() {
     this.websocket.send(JSON.stringify({
       type: 'Reset',
@@ -306,6 +332,112 @@ export default class RealtimeWebSocketEndpoint {
     }));
   }
 
+  loadLoocalScenarioSets() {
+    this.websocket.send(JSON.stringify({
+      type: 'HMIAction',
+      action: 'LOAD_SCENARIOS',
+    }));
+  }
+
+  /**
+   *
+   * @param scenarioId string
+   */
+  changeScenario(scenarioId) {
+    this.websocket.send(JSON.stringify({
+      type: 'HMIAction',
+      action: 'CHANGE_SCENARIO',
+      value: scenarioId,
+    }));
+  }
+
+  /**
+   *
+   * @param scenarioSetId string
+   */
+  changeScenarioSet(scenarioSetId) {
+    this.websocket.send(JSON.stringify({
+      type: 'HMIAction',
+      action: 'CHANGE_SCENARIO_SET',
+      value: scenarioSetId,
+    }));
+
+    // 切换场景集后，需要重新置空当前场景
+    this.changeScenario('');
+  }
+
+  deleteScenarioSet(scenarioSetId) {
+    this.websocket.send(JSON.stringify({
+      type: 'HMIAction',
+      action: 'DELETE_SCENARIO_SET',
+      value: scenarioSetId,
+    }));
+  }
+
+  getDymaticModelList() {
+    this.websocket.send(JSON.stringify({
+      type: 'HMIAction',
+      action: 'LOAD_DYNAMIC_MODELS',
+    }));
+  }
+
+  changeDynamicModel(model) {
+    this.websocket.send(JSON.stringify({
+      type: 'HMIAction',
+      action: 'CHANGE_DYNAMIC_MODEL',
+      value: model,
+    }));
+  }
+
+  switchToDefaultDynamicModel() {
+    this.websocket.send(JSON.stringify({
+      type: 'HMIAction',
+      action: 'CHANGE_DYNAMIC_MODEL',
+      value: 'Simulation Perfect Control',
+    }));
+  }
+
+  deleteDynamicModels(dynamicModelId) {
+    this.websocket.send(JSON.stringify({
+      type: 'HMIAction',
+      action: 'DELETE_DYNAMIC_MODEL',
+      value: dynamicModelId,
+    }));
+  }
+
+  // 加载本地records
+  loadLocalRecords() {
+    this.websocket.send(JSON.stringify({
+      type: 'HMIAction',
+      action:'LOAD_RECORDS',
+    }));
+  }
+
+  // 选择本地records
+  changeRecord(recordId) {
+    this.websocket.send(JSON.stringify({
+      type: 'HMIAction',
+      action:'CHANGE_RECORD',
+      value: recordId,
+    }));
+  }
+
+  // 删除本地record
+  deleteRecord(recordId) {
+    this.websocket.send(JSON.stringify({
+      type: 'HMIAction',
+      action:'DELETE_RECORD',
+      value: recordId,
+    }));
+  }
+
+  // 停止本地record播放
+  stopRecord() {
+    this.websocket.send(JSON.stringify({
+      type: 'HMIAction',
+      action:'STOP_RECORD',
+    }));
+  }
   executeModeCommand(action) {
     if (!['SETUP_MODE', 'RESET_MODE', 'ENTER_AUTO_MODE'].includes(action)) {
       console.error('Unknown mode command found:', action);
@@ -390,11 +522,12 @@ export default class RealtimeWebSocketEndpoint {
     this.pointcloudWS = pointcloudws;
   }
 
-  saveDefaultRouting(routingName,points) {
+  saveDefaultRouting(routingName, points) {
     const request = {
       type: 'SaveDefaultRouting',
       name: routingName,
       point: points,
+      routingType: 'defaultRouting',
     };
     this.websocket.send(JSON.stringify(request));
   }
@@ -411,6 +544,34 @@ export default class RealtimeWebSocketEndpoint {
     };
     if (data) {
       request.data = data;
+    }
+    this.websocket.send(JSON.stringify(request));
+  }
+
+  sendParkingRequest(
+    start,
+    waypoint,
+    end,
+    parkingInfo,
+    laneWidth,
+    cornerPoints,
+    id,
+    start_heading
+  ) {
+    const request = {
+      type: 'SendParkingRoutingRequest',
+      start,
+      end,
+      waypoint,
+      parkingInfo,
+      laneWidth,
+      cornerPoints,
+    };
+    if (start_heading) {
+      request.start.heading = start_heading;
+    }
+    if (id) {
+      request.end.id = id;
     }
     this.websocket.send(JSON.stringify(request));
   }

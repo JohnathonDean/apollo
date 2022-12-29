@@ -10,5 +10,8 @@ install(
         "//cyber/tools/cyber_launch:install",
         "//cyber/tools/cyber_monitor:install",
         "//cyber/tools/cyber_recorder:install",
+        "//cyber/tools/cyber_channel:install",
+        "//cyber/tools/cyber_node:install",
+        "//cyber/tools/cyber_service:install",
     ],
 )

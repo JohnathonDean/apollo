@@ -34,9 +34,9 @@
 #include "modules/prediction/common/junction_analyzer.h"
 #include "modules/prediction/common/prediction_gflags.h"
 #include "modules/prediction/container/obstacles/obstacle_clusters.h"
-#include "modules/prediction/proto/feature.pb.h"
+#include "modules/common_msgs/prediction_msgs/feature.pb.h"
 #include "modules/prediction/proto/prediction_conf.pb.h"
-#include "modules/prediction/proto/prediction_obstacle.pb.h"
+#include "modules/common_msgs/prediction_msgs/prediction_obstacle.pb.h"
 
 /**
  * @namespace apollo::prediction
@@ -227,6 +227,17 @@ class Obstacle {
   void SetCaution();
 
   bool IsCaution() const;
+
+  /**
+   * @brief Set the obstacle as interactive obstacle.
+   */
+  void SetInteractiveTag();
+  /**
+   * @brief Set the obstacle as noninteractive obstacle.
+   */
+  void SetNonInteractiveTag();
+
+  bool IsInteractiveObstacle() const;
 
   void SetEvaluatorType(const ObstacleConf::EvaluatorType& evaluator_type);
 

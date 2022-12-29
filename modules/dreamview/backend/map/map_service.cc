@@ -155,6 +155,15 @@ const hdmap::HDMap *MapService::SimMap() const {
 
 bool MapService::MapReady() const { return HDMap() && SimMap(); }
 
+bool MapService::PointIsValid(const double x, const double y) const {
+  MapElementIds ids;
+  PointENU point;
+  point.set_x(x);
+  point.set_y(y);
+  CollectMapElementIds(point, 20, &ids);
+  return (ids.ByteSizeLong() != 0);
+}
+
 void MapService::CollectMapElementIds(const PointENU &point, double radius,
                                       MapElementIds *ids) const {
   if (!MapReady()) {
@@ -354,7 +363,7 @@ bool MapService::GetNearestLaneWithHeading(const double x, const double y,
   PointENU point;
   point.set_x(x);
   point.set_y(y);
-  static constexpr double kSearchRadius = 1.0;
+  static constexpr double kSearchRadius = 3.0;
   static constexpr double kMaxHeadingDiff = 1.0;
   if (!MapReady() || HDMap()->GetNearestLaneWithHeading(
                          point, kSearchRadius, heading, kMaxHeadingDiff,
@@ -429,10 +438,59 @@ bool MapService::ConstructLaneWayPointWithHeading(
   return true;
 }
 
+bool MapService::ConstructLaneWayPointWithLaneId(
+    const double x, const double y, const std::string id,
+    routing::LaneWaypoint *laneWayPoint) const {
+  LaneInfoConstPtr lane = HDMap()->GetLaneById(hdmap::MakeMapId(id));
+  if (!lane) {
+    return false;
+  }
+
+  if (!CheckRoutingPointLaneType(lane)) {
+    return false;
+  }
+
+  double s, l;
+  PointENU point;
+  point.set_x(x);
+  point.set_y(y);
+
+  if (!lane->GetProjection({point.x(), point.y()}, &s, &l)) {
+    return false;
+  }
+
+  // Limit s with max value of the length of the lane, or not the laneWayPoint
+  // may be invalid.
+  if (s > lane->lane().length()) {
+    s = lane->lane().length();
+  }
+
+  laneWayPoint->set_id(id);
+  laneWayPoint->set_s(s);
+  auto *pose = laneWayPoint->mutable_pose();
+  pose->set_x(x);
+  pose->set_y(y);
+
+  return true;
+}
+
 bool MapService::CheckRoutingPoint(const double x, const double y) const {
   double s, l;
   LaneInfoConstPtr lane;
   if (!GetNearestLane(x, y, &lane, &s, &l)) {
+    return false;
+  }
+  if (!CheckRoutingPointLaneType(lane)) {
+    return false;
+  }
+  return true;
+}
+
+bool MapService::CheckRoutingPointWithHeading(const double x, const double y,
+                                              const double heading) const {
+  double s, l;
+  LaneInfoConstPtr lane;
+  if (!GetNearestLaneWithHeading(x, y, &lane, &s, &l, heading)) {
     return false;
   }
   if (!CheckRoutingPointLaneType(lane)) {
@@ -514,6 +572,19 @@ bool MapService::AddPathFromPassageRegion(
 size_t MapService::CalculateMapHash(const MapElementIds &ids) const {
   static std::hash<std::string> hash_function;
   return hash_function(ids.DebugString());
+}
+
+double MapService::GetLaneHeading(const std::string &id_str, double s) {
+  auto *hdmap = HDMap();
+  CHECK(hdmap) << "Failed to get hdmap";
+
+  Id id;
+  id.set_id(id_str);
+  LaneInfoConstPtr lane_ptr = hdmap->GetLaneById(id);
+  if (lane_ptr != nullptr) {
+    return lane_ptr->Heading(s);
+  }
+  return 0.0;
 }
 
 }  // namespace dreamview

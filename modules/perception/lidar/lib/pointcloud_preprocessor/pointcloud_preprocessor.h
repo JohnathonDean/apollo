@@ -15,52 +15,40 @@
  *****************************************************************************/
 #pragma once
 
-#include <memory>
 #include <string>
+#include <memory>
 
-#include "modules/drivers/proto/pointcloud.pb.h"
-#include "modules/perception/lidar/common/lidar_frame.h"
+#include "modules/perception/lidar/lib/interface/base_pointcloud_preprocessor.h"
+#include "modules/perception/pipeline/proto/stage/pointcloud_preprocessor_config.pb.h"
+#include "modules/perception/pipeline/stage.h"
 
 namespace apollo {
 namespace perception {
 namespace lidar {
 
-struct PointCloudPreprocessorInitOptions {
-  std::string sensor_name = "velodyne64";
-};
-
-struct PointCloudPreprocessorOptions {
-  Eigen::Affine3d sensor2novatel_extrinsics;
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-} EIGEN_ALIGN16;
-
-class PointCloudPreprocessor {
+class PointCloudPreprocessor : public BasePointCloudPreprocessor {
  public:
   PointCloudPreprocessor() = default;
-
-  ~PointCloudPreprocessor() = default;
+  virtual ~PointCloudPreprocessor() = default;
 
   bool Init(const PointCloudPreprocessorInitOptions& options =
-                PointCloudPreprocessorInitOptions());
+                PointCloudPreprocessorInitOptions()) override;
 
-  // @brief: preprocess point cloud
-  // @param [in]: options
-  // @param [in]: point cloud message
-  // @param [in/out]: frame
-  // cloud should be filled, required,
   bool Preprocess(
       const PointCloudPreprocessorOptions& options,
       const std::shared_ptr<apollo::drivers::PointCloud const>& message,
-      LidarFrame* frame) const;
+      LidarFrame* frame) const override;
 
-  // @brief: preprocess point cloud
-  // @param [in/out]: frame
-  // cloud should be filled, required,
   bool Preprocess(const PointCloudPreprocessorOptions& options,
-                  LidarFrame* frame) const;
+                  LidarFrame* frame) const override;
 
-  std::string Name() const { return "PointCloudPreprocessor"; }
+  bool Init(const StageConfig& stage_config) override;
+
+  bool Process(DataFrame* data_frame) override;
+
+  bool IsEnabled() const override { return enable_; }
+
+  std::string Name() const override { return name_; }
 
  private:
   bool TransformCloud(const base::PointFCloudPtr& local_cloud,
@@ -76,6 +64,9 @@ class PointCloudPreprocessor {
   bool filter_high_z_points_ = true;
   float z_threshold_ = 5.0f;
   static const float kPointInfThreshold;
+
+
+  PointcloudPreprocessorConfig pointcloud_preprocessor_config_;
 };  // class PointCloudPreprocessor
 
 }  // namespace lidar

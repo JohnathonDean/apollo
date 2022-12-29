@@ -25,7 +25,7 @@ RUNTIME_STANDALONE="false"
 
 TARGET_ARCH="$(uname -m)"
 
-VERSION_X86_64="dev-x86_64-18.04-20210517_1712"
+VERSION_X86_64="runtime-x86_64-18.04-20220803_1505"
 USER_VERSION_OPT=
 
 FAST_MODE="no"
@@ -155,11 +155,6 @@ function check_host_environment() {
         warning "Apollo Runtime Docker supports x86_64 ONLY!"
         exit 2
     fi
-
-    if [[ -f "${CURR_DIR}/dev_start.sh" ]]; then
-        warning "${CURR_DIR}/dev_start.sh detected."
-        warning "Apollo Runtime Docker is expected to run with release builds."
-    fi
 }
 
 function setup_devices_and_mount_local_volumes() {
@@ -172,10 +167,15 @@ function setup_devices_and_mount_local_volumes() {
     if $RUNTIME_STANDALONE; then
         volumes="-v ${APOLLO_ROOT_DIR}/data:/apollo/data \
                  -v ${APOLLO_ROOT_DIR}/modules/calibration/data:/apollo/modules/calibration/data \
-                 -v ${APOLLO_ROOT_DIR}/modules/map/data:/apollo/modules/map/data"
+                 -v ${APOLLO_ROOT_DIR}/modules/map/data:/apollo/modules/map/data \
+                 -v ${APOLLO_ROOT_DIR}/output:/apollo/output"
     else
         volumes="-v ${APOLLO_ROOT_DIR}:/apollo"
     fi
+
+    [ -d "${APOLLO_CONFIG_HOME}" ] || mkdir -p "${APOLLO_CONFIG_HOME}"
+    volumes="-v ${APOLLO_CONFIG_HOME}:${APOLLO_CONFIG_HOME} ${volumes}"
+
 
     local os_release="$(lsb_release -rs)"
     case "${os_release}" in

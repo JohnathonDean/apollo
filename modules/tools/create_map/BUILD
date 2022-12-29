@@ -3,18 +3,23 @@ load("//tools/install:install.bzl", "install")
 
 package(default_visibility = ["//visibility:public"])
 
-install(
-    name = "install",
-    targets = [
-      ":convert_map_txt2bin",
-    ],
-    runtime_dest = "modules/tools/create_map",
+filegroup(
+    name = "py_files",
+    srcs = glob([
+        "*.py",
+    ]),
 )
 
 py_binary(
     name = "convert_map_txt2bin",
     srcs = ["convert_map_txt2bin.py"],
     deps = [
-        "//modules/map/proto:map_py_pb2",
+        "//modules/common_msgs/map_msgs:map_py_pb2",
     ],
+)
+
+install(
+    name = "install",
+    py_dest = "tools/create_map",
+    targets = [":convert_map_txt2bin"]
 )

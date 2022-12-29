@@ -1,5 +1,6 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("//tools:cpplint.bzl", "cpplint")
+load("//tools/platform:build_defs.bzl", "if_gpu")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -26,9 +27,15 @@ cc_library(
         "//modules/prediction/evaluator/vehicle:lane_scanning_evaluator",
         "//modules/prediction/evaluator/vehicle:mlp_evaluator",
         "//modules/prediction/evaluator/vehicle:semantic_lstm_evaluator",
+        "//modules/prediction/evaluator/vehicle:jointly_prediction_planning_evaluator",
+        "//modules/prediction/evaluator/vehicle:vectornet_evaluator",
         "//modules/prediction/proto:prediction_conf_cc_proto",
-        "//third_party:libtorch",
-    ],
+        "//modules/prediction/pipeline:vector_net",
+        #"//third_party/libtorch",
+    ]  + if_gpu(
+        ["@libtorch_gpu"],
+        ["@libtorch_cpu"],
+    )
 )
 
 cc_test(
@@ -46,6 +53,7 @@ cc_test(
         "//modules/prediction/common:kml_map_based_test",
         "//modules/prediction/evaluator:evaluator_manager",
     ],
+    linkstatic = True,
 )
 
 cc_library(
@@ -53,6 +61,7 @@ cc_library(
     hdrs = ["evaluator.h"],
     deps = [
         "//modules/prediction/container/obstacles:obstacle",
+        "//modules/prediction/container/adc_trajectory:adc_trajectory_container",
     ],
 )
 

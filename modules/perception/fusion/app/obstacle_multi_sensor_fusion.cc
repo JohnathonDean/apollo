@@ -25,10 +25,12 @@ bool ObstacleMultiSensorFusion::Init(
     AINFO << "Already inited";
     return true;
   }
-  fusion_ = BaseFusionSystemRegisterer::GetInstanceByName(param.fusion_method);
+  BaseFusionSystem* fusion =
+          BaseFusionSystemRegisterer::GetInstanceByName(param.fusion_method);
+  fusion_.reset(fusion);
 
   FusionInitOptions init_options;
-  init_options.main_sensors = param.main_sensors;
+  init_options.main_sensor = param.main_sensor;
   if (fusion_ == nullptr || !fusion_->Init(init_options)) {
     AINFO << "Failed to Get Instance or Initialize " << param.fusion_method;
     return false;
@@ -36,11 +38,24 @@ bool ObstacleMultiSensorFusion::Init(
   return true;
 }
 
+bool ObstacleMultiSensorFusion::Init(const PipelineConfig& pipeline_config) {
+  return Initialize(pipeline_config);
+}
+
+bool ObstacleMultiSensorFusion::Process(DataFrame* data_frame) {
+  if (data_frame == nullptr)
+    return false;
+
+  return InnerProcess(data_frame);
+}
+
 bool ObstacleMultiSensorFusion::Process(const base::FrameConstPtr& frame,
                                         std::vector<base::ObjectPtr>* objects) {
   FusionOptions options;
   return fusion_->Fuse(options, frame, objects);
 }
+
+PERCEPTION_REGISTER_MULTISENSORFUSION(ObstacleMultiSensorFusion);
 
 }  // namespace fusion
 }  // namespace perception

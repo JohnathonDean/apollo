@@ -30,6 +30,7 @@
 #include "modules/planning/math/discrete_points_math.h"
 #include "modules/planning/math/discretized_points_smoothing/fem_pos_deviation_smoother.h"
 #include "modules/planning/math/piecewise_jerk/piecewise_jerk_speed_problem.h"
+#include "modules/planning/proto/planner_open_space_config.pb.h"
 
 namespace apollo {
 namespace planning {
@@ -626,13 +627,7 @@ bool IterativeAnchoringSmoother::SmoothSpeed(const double init_a,
           .delta_t();
 
   const double total_t = 2 * path_length / max_reverse_acc * 10;
-
-  if (total_t + delta_t >= delta_t * std::numeric_limits<size_t>::max()) {
-    AERROR << "Number of knots overflow. total_t: " << total_t
-           << ", delta_t: " << delta_t;
-    return false;
-  }
-
+  ADEBUG << "total_t is : " << total_t;
   const size_t num_of_knots = static_cast<size_t>(total_t / delta_t) + 1;
 
   PiecewiseJerkSpeedProblem piecewise_jerk_problem(

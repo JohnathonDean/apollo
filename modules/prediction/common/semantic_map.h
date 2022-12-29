@@ -22,7 +22,7 @@
 #include "opencv2/opencv.hpp"
 
 #include "cyber/common/macros.h"
-#include "modules/prediction/proto/feature.pb.h"
+#include "modules/common_msgs/prediction_msgs/feature.pb.h"
 
 namespace apollo {
 namespace prediction {
@@ -78,6 +78,10 @@ class SemanticMap {
 
   void DrawHistory(const ObstacleHistory& history, const cv::Scalar& color,
                    const double base_x, const double base_y, cv::Mat* img);
+
+  // Draw adc trajectory in semantic map
+  void DrawADCTrajectory(const cv::Scalar& color, const double base_x,
+                         const double base_y, cv::Mat* img);
 
   cv::Mat CropArea(const cv::Mat& input_img, const cv::Point2i& center_point,
                    const double heading);

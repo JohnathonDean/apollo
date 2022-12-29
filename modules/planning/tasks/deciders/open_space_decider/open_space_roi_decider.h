@@ -26,16 +26,18 @@
 #include <vector>
 
 #include "Eigen/Dense"
+
+#include "modules/common/vehicle_state/proto/vehicle_state.pb.h"
+#include "modules/common_msgs/config_msgs/vehicle_config.pb.h"
+#include "modules/common_msgs/map_msgs/map_id.pb.h"
+
 #include "cyber/common/log.h"
-#include "modules/common/configs/proto/vehicle_config.pb.h"
 #include "modules/common/configs/vehicle_config_helper.h"
 #include "modules/common/math/vec2d.h"
-#include "modules/common/vehicle_state/proto/vehicle_state.pb.h"
 #include "modules/common/vehicle_state/vehicle_state_provider.h"
 #include "modules/map/hdmap/hdmap_util.h"
 #include "modules/map/pnc_map/path.h"
 #include "modules/map/pnc_map/pnc_map.h"
-#include "modules/map/proto/map_id.pb.h"
 #include "modules/planning/common/frame.h"
 #include "modules/planning/common/indexed_queue.h"
 #include "modules/planning/common/obstacle.h"
@@ -147,7 +149,7 @@ class OpenSpaceRoiDecider : public Decider {
 
   // @brief if not close enough to parking spot, return false
   bool CheckDistanceToParkingSpot(
-      const hdmap::Path &nearby_path,
+      Frame *const frame, const hdmap::Path &nearby_path,
       const hdmap::ParkingSpaceInfoConstPtr &target_parking_spot);
 
   // @brief Helper function for fuse line segments into convex vertices set
@@ -195,6 +197,15 @@ class OpenSpaceRoiDecider : public Decider {
    */
   void GetParkSpotFromMap(hdmap::ParkingSpaceInfoConstPtr parking_lot,
                           std::array<common::math::Vec2d, 4> *vertices);
+
+  /**
+   * @brief Collect all the lane segments in the routing reponse.
+   *
+   * @param routing_response The routing response containing the lane segments.
+   * @param routing_segments The output vector of lane segments.
+   */
+  void GetAllLaneSegments(const routing::RoutingResponse &routing_response,
+                          std::vector<routing::LaneSegment> *routing_segments);
 
  private:
   // @brief parking_spot_id from routing
