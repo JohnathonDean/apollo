@@ -1,5 +1,5 @@
 load("//tools/install:install.bzl", "install", "install_src_files")
-load("//tools/platform:build_defs.bzl", "if_gpu")
+load("//third_party/gpus:common.bzl", "if_gpu")
 
 package(
     default_visibility = ["//visibility:public"],
@@ -22,6 +22,7 @@ install(
     ], [
         "//cyber:install",
         "//tools:install",
+        "//modules/data:install",
         #"//cyber/examples:install",
         #"//docker/scripts:install",
         #"//docs:install",
@@ -110,6 +111,7 @@ install_src_files(
         "//cyber:install_src",
         "//tools:install_src",
         "//modules/common:install_src",
+        "//modules/data:install_src",
         "//modules/common_msgs:install_src",
         "//modules/control:install_src",
         "//modules/dreamview:install_src",
@@ -131,7 +133,7 @@ install_src_files(
         "//modules/prediction:install_src",
         "//modules/storytelling:install_src",
         "//modules/third_party_perception:install_src",
-        "//modules/tools:install_src",  
+        "//modules/tools:install_src",
         "//third_party/absl:install_src",
         "//third_party/boost:install_src",
         "//third_party/civetweb:install_src",

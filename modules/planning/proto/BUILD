@@ -2,7 +2,7 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_cc//cc:defs.bzl", "cc_proto_library")
 load("//tools/install:install.bzl", "install", "install_files")
-load("//tools/platform:build_defs.bzl", "if_gpu")
+load("//third_party/gpus:common.bzl", "if_gpu")
 load("//tools:python_rules.bzl", "py_proto_library")
 
 package(default_visibility = ["//visibility:public"])
@@ -10,8 +10,8 @@ package(default_visibility = ["//visibility:public"])
 install_files(
     name = "py_pb_planning",
     dest = if_gpu(
-        "planning/python/modules/planning/proto", 
-        "planning-gpu/python/modules/planning/proto", 
+        "planning-gpu/python/modules/planning/proto",
+        "planning/python/modules/planning/proto",
     ),
     files = [
         ":st_drivable_boundary_py_pb2",
@@ -30,6 +30,34 @@ install_files(
         ":planner_open_space_config_py_pb2",
         ":task_config_py_pb2",
         ":planning_config_py_pb2",
+    ]
+)
+
+install_files(
+    name = "pb_hdrs_planning",
+    dest = if_gpu(
+        "planning-gpu/include/proto",
+        "planning/include/proto",
+    ),
+    files = [
+        ":st_drivable_boundary_cc_proto",
+        ":planning_stats_cc_proto",
+        ":planning_semantic_map_config_cc_proto",
+        ":traffic_rule_config_cc_proto",
+        ":planning_status_cc_proto",
+        ":lattice_structure_cc_proto",
+        ":learning_data_cc_proto",
+        ":auto_tuning_model_input_cc_proto",
+        ":auto_tuning_raw_feature_cc_proto",
+        ":reference_line_smoother_config_cc_proto",
+        ":ipopt_return_status_cc_proto",
+        "//modules/planning/proto/math:fem_pos_deviation_smoother_config_cc_proto",
+        "//modules/planning/proto/math:cos_theta_smoother_config_cc_proto",
+        "//modules/planning/proto/math:qp_problem_cc_proto",
+        ":open_space_task_config_cc_proto",
+        ":planner_open_space_config_cc_proto",
+        ":task_config_cc_proto",
+        ":planning_config_cc_proto",
     ]
 )
 

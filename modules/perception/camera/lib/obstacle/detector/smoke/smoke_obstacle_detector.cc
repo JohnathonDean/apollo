@@ -16,6 +16,7 @@
 #include "modules/perception/camera/lib/obstacle/detector/smoke/smoke_obstacle_detector.h"
 
 #include <opencv2/opencv.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "cyber/common/file.h"
 #include "cyber/common/log.h"
@@ -149,8 +150,8 @@ void SmokeObstacleDetector::InitSmokeBlob(
 
 bool SmokeObstacleDetector::Init(const ObstacleDetectorInitOptions &options) {
   gpu_id_ = options.gpu_id;
-  BASE_CUDA_CHECK(cudaSetDevice(gpu_id_));
-  BASE_CUDA_CHECK(cudaStreamCreate(&stream_));
+  BASE_GPU_CHECK(cudaSetDevice(gpu_id_));
+  BASE_GPU_CHECK(cudaStreamCreate(&stream_));
 
   base_camera_model_ = options.base_camera_model;
   ACHECK(base_camera_model_ != nullptr) << "base_camera_model is nullptr!";
@@ -203,12 +204,16 @@ bool SmokeObstacleDetector::Init(const StageConfig &stage_config) {
       stage_config.camera_detector_config();
 
   gpu_id_ = smoke_obstacle_detection_config_.gpu_id();
-  BASE_CUDA_CHECK(cudaSetDevice(gpu_id_));
-  BASE_CUDA_CHECK(cudaStreamCreate(&stream_));
+  BASE_GPU_CHECK(cudaSetDevice(gpu_id_));
+  BASE_GPU_CHECK(cudaStreamCreate(&stream_));
 
+  std::string camera_name =
+          smoke_obstacle_detection_config_.camera_name();
+  boost::algorithm::split(camera_names_, camera_name,
+                              boost::algorithm::is_any_of(","));
   base_camera_model_ =
       common::SensorManager::Instance()->GetUndistortCameraModel(
-          smoke_obstacle_detection_config_.camera_name());
+          camera_names_[0]);
   ACHECK(base_camera_model_ != nullptr) << "base_camera_model is nullptr!";
 
   std::string config_path =

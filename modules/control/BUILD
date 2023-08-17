@@ -77,7 +77,8 @@ install(
         ":testdata",
         "//modules/control/submodules:install",
         "//modules/control/tools:install",
-        "//modules/control/proto:py_pb_control"
+        "//modules/control/proto:py_pb_control",
+        "//modules/control/common:install"
     ],
 )
 
@@ -96,7 +97,7 @@ install(
         "//modules/control/proto:mpc_controller_conf_cc_proto",
         "//modules/control/proto:mrac_conf_cc_proto",
         "//modules/control/proto:pid_conf_cc_proto",
-        "//modules/control/proto:preprocessor_cc_proto",       
+        "//modules/control/proto:preprocessor_cc_proto",
     ],
 )
 
